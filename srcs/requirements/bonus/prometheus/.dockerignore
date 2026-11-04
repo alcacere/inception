@@ -1,0 +1,2 @@
+# .dockerignore                                          READ: docs/03
+# WRITE: *.md, .git, .env, *.swp

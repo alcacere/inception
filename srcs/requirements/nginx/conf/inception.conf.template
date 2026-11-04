@@ -1,0 +1,32 @@
+# inception.conf.template (virtual host, rendered by envsubst)   READ: docs/06, 10
+#
+# WRITE one `server { }` block:
+#   listen 443 ssl;  (+ listen [::]:443 ssl;)   ☠ no `listen 80` anywhere
+#   http2 on;        (optional)
+#   server_name ${DOMAIN_NAME};
+#
+#   ssl_certificate      <crt path>;
+#   ssl_certificate_key  <key path>;
+#   ssl_protocols        TLSv1.2 TLSv1.3;      ☠ THE mandatory line
+#   (optional) ssl_ciphers / ssl_prefer_server_ciphers / ssl_session_* (Mozilla generator)
+#
+#   root /var/www/html;   ← must be the SAME path where wordpress mounts the volume
+#   index index.php index.html;
+#
+#   location / { try_files $uri $uri/ /index.php?$args; }
+#   location ~ \.php$ {
+#       include fastcgi_params;
+#       fastcgi_pass wordpress:9000;                     (service name = DNS name)
+#       fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+#       fastcgi_param HTTPS on;
+#   }
+#   location ~ /\.  { deny all; }                        hide dotfiles
+#   (optional) security headers: HSTS, X-Frame-Options, X-Content-Type-Options
+#
+#   BONUS locations (443 stays the single web entry point)
+#   location ^~ /adminer     { fastcgi_pass adminer:9000; SCRIPT_FILENAME <path in adminer container>; }
+#   location /portfolio/     { proxy_pass http://website:<port>/; }
+#   location /prometheus/    { proxy_pass http://prometheus:9090/; auth_basic ...; }
+#
+# ⚠ Render with:  envsubst '${DOMAIN_NAME}' < template > /etc/nginx/http.d/inception.conf
+#   (restricting the list protects $uri, $args, $document_root...)

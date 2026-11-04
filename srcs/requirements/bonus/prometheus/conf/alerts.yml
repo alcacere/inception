@@ -1,0 +1,11 @@
+# alerts.yml (alerting rules: your SOC-style detections)  READ: docs/10 §5
+#
+# WRITE groups of rules, each with `alert`, `expr`, `for`, `labels`, `annotations`:
+#   ServiceDown        a probe that should pass fails for 1m
+#   Port80Open         the nginx:80 TCP probe SUCCEEDS (a subject rule was broken)
+#   CertExpiringSoon   (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+#   OldTlsAccepted     the tls_old probe SUCCEEDS
+#
+# Without Alertmanager, these still show under Alerts in the Prometheus UI, which is enough here.
+#
+# CHECK  docker exec prometheus promtool check rules /etc/prometheus/alerts.yml

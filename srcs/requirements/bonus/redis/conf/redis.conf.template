@@ -1,0 +1,11 @@
+# redis.conf.template                                    READ: docs/10 §1
+#
+# WRITE
+#   bind 0.0.0.0            port ${REDIS_PORT}       protected-mode yes
+#   requirepass ${REDIS_PASSWORD}      ← injected from the secret at start
+#   daemonize no            (PID 1)    logfile ""   (stdout → docker logs)
+#   maxmemory 128mb         maxmemory-policy allkeys-lru     (cache behaviour)
+#   save ""                 appendonly no      (pure cache: no persistence → no volume)
+#
+# CHECK  docker exec redis redis-cli -a "$(cat secrets/redis_password.txt)" ping → PONG
+#        (run on the VM, reading the secret from the host file)

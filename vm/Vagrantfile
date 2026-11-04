@@ -1,0 +1,39 @@
+
+LOGIN = "alcacere"
+
+Vagrant.configure("2") do |config|
+
+  # 1. Box and hostname
+  config.vm.box = "inception-debian"
+  config.vm.hostname = "inception"
+
+  # Vagrant must connect as this user.
+  # Use "sudo -iu alcacere" to work as the project user.
+  config.ssh.username = "vagrant"
+
+  # 2. Networking
+  config.vm.network "private_network", ip: "192.168.56.42"
+
+  # 3. Synchronize the project from the host into the VM.
+  config.vm.synced_folder "..", "/home/#{LOGIN}/inception/",
+    type: "rsync",
+    owner: LOGIN,
+    rsync__exclude: [
+      ".git/",
+      "vm/.vagrant/",
+      "vm/packer/output/",
+	  "secrets/",
+	  "srcs/.env"
+    ],
+    rsync__rsync_path: "sudo rsync"
+
+  # 4. VirtualBox provider configuration
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "inception"
+    vb.cpus = 2
+    vb.memory = 4096
+    vb.gui = true
+  end
+
+end
+

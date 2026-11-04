@@ -1,0 +1,16 @@
+# .gitignore
+
+srcs/.env
+secrets/*
+!secrets/.gitkeep
+vm/packer/output*/
+vm/packer/packer_cache/
+*.box
+vm/.vagrant/
+.vscode/
+.idea/
+*.swp
+
+# CHECK
+#   git status --ignored      → .env and secrets/*.txt listed as ignored
+#   git ls-files | grep -E "\.env$|secrets/.*\.txt"   → must print nothing
