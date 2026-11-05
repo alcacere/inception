@@ -1,27 +1,38 @@
 #!/bin/sh
-# MariaDB entrypoint                                     READ: docs/08, 09
-#
-# PURPOSE
-#   First start: initialize the datadir + run the one-time SQL.
-#   Every start: hand over to mariadbd as PID 1.
-#
-# WRITE (`set -eu`)
-#   1. If "$1" is not mariadbd → exec "$@"  (lets you run `docker run img sh` for debugging)
-#   2. Read secrets: DB_PASS=$(cat /run/secrets/db_password), ROOT_PASS=...
-#   3. if [ ! -d /var/lib/mysql/mysql ]  → FIRST RUN:
-#        a. mariadb-install-db --user=mysql --datadir=/var/lib/mysql
-#             --auth-root-authentication-method=normal  ☠ (else root logs in without a password!)
-#             --skip-test-db
-#        b. build the SQL (heredoc): FLUSH PRIVILEGES; ALTER USER root@localhost
-#           IDENTIFIED BY ...; delete anonymous users; CREATE DATABASE IF NOT EXISTS;
-#           CREATE USER IF NOT EXISTS '<user>'@'%' ...; GRANT ALL ON <db>.*; FLUSH PRIVILEGES;
-#        c. run it WITHOUT a background server: mariadbd --bootstrap < file (or stdin)
-#           (alternative: temporary server + BOUNDED ping loop, see docs/08 option B)
-#        d. never leave the SQL file on disk with passwords (use stdin, or delete it)
-#   4. exec "$@"  → mariadbd becomes PID 1
-#
-# ☠ No `&` for the final process, no infinite loop, no tail -f.
-#
-# CHECK
-#   docker compose restart mariadb   → logs show NO re-initialization
-#   docker exec -it mariadb mariadb -u root    → Access denied
+
+set -eu
+
+if [ "$1" != "mariadbd" ]; then
+	exec "$@"
+fi
+
+DB_PASSWORD=$(cat /run/secrets/db_password)
+DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
+
+MYSQL_DATABASE="${MYSQL_DATABASE:-wordpress}"
+MYSQL_USER="${MYSQL_USER:-wp_dbuser}"
+
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+	echo "==> initializing MariaDB data directory..."
+
+mariadb-install-db \
+	--user=mysql \
+	--datadir=/var/lib/mysql \
+	--auth-root-authentication-method=normal \
+	--skip-test-db
+
+    echo "==> Configuring users and initial database..."
+    mariadbd --user=mysql --bootstrap <<EOF
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+DELETE FROM mysql.user WHERE User='';
+CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+FLUSH PRIVILEGES;
+EOF
+
+fi
+
+echo "==> Starting MariaDB server..."
+exec "$@"
