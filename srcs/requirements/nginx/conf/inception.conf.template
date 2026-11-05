@@ -1,32 +1,37 @@
-# inception.conf.template (virtual host, rendered by envsubst)   READ: docs/06, 10
-#
-# WRITE one `server { }` block:
-#   listen 443 ssl;  (+ listen [::]:443 ssl;)   ☠ no `listen 80` anywhere
-#   http2 on;        (optional)
-#   server_name ${DOMAIN_NAME};
-#
-#   ssl_certificate      <crt path>;
-#   ssl_certificate_key  <key path>;
-#   ssl_protocols        TLSv1.2 TLSv1.3;      ☠ THE mandatory line
-#   (optional) ssl_ciphers / ssl_prefer_server_ciphers / ssl_session_* (Mozilla generator)
-#
-#   root /var/www/html;   ← must be the SAME path where wordpress mounts the volume
-#   index index.php index.html;
-#
-#   location / { try_files $uri $uri/ /index.php?$args; }
-#   location ~ \.php$ {
-#       include fastcgi_params;
-#       fastcgi_pass wordpress:9000;                     (service name = DNS name)
-#       fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-#       fastcgi_param HTTPS on;
-#   }
-#   location ~ /\.  { deny all; }                        hide dotfiles
-#   (optional) security headers: HSTS, X-Frame-Options, X-Content-Type-Options
-#
-#   BONUS locations (443 stays the single web entry point)
-#   location ^~ /adminer     { fastcgi_pass adminer:9000; SCRIPT_FILENAME <path in adminer container>; }
-#   location /portfolio/     { proxy_pass http://website:<port>/; }
-#   location /prometheus/    { proxy_pass http://prometheus:9090/; auth_basic ...; }
-#
-# ⚠ Render with:  envsubst '${DOMAIN_NAME}' < template > /etc/nginx/http.d/inception.conf
-#   (restricting the list protects $uri, $args, $document_root...)
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name ${DOMAIN_NAME};
+
+	ssl_certificate /etc/nginx/ssl/inception.crt;
+	ssl_certificate_key /etc/nginx/ssl/inception.key;
+
+	ssl_protocols TLSv1.2 TLSv1.3;
+	ssl_prefer_server_ciphers on;
+	ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+	ssl_session_cache shared:SSL:10m;
+	ssl_session_timeout 1d;
+
+	root /var/www/html;
+	index index.php index.html;
+
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+	}
+
+	location ~ \.php$ {
+		try_files $uri =404;
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		fastcgi_pass wordpress:9000;
+		fastcgi_index index.php;
+		include fastcgi_params;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+		fastcgi_param PATH_INFO $fastcgi_path_info;
+		fastcgi_param HTTPS on;
+	}
+
+	location ~ /\. {
+		deny all;
+	}
+}
