@@ -1,17 +1,14 @@
-# mariadb-server.cnf (replaces /etc/my.cnf.d/mariadb-server.cnf)   READ: docs/08
-#
-# PURPOSE
-#   Alpine's default config has `skip-networking`, so MariaDB only listens on its
-#   unix socket and WordPress (another container) can't connect. This file fixes that.
-#
-# WRITE under a [mariadbd] (or [mysqld]) group:
-#   skip-networking = 0       (or simply don't set skip-networking)
-#   bind-address    = 0.0.0.0 (listen on the container's interface)
-#   port            = 3306
-#   datadir         = /var/lib/mysql   (← the named volume)
-#   socket          = /run/mysqld/mysqld.sock
-#   character-set-server = utf8mb4 / collation-server = utf8mb4_unicode_ci
-#   (optional) innodb_buffer_pool_size, sized for your VM's RAM
-#
-# CHECK
-#   docker exec mariadb mariadb-admin -u root -p variables | grep -E "skip_networking|bind"
+# mariadb-server.cnf (replaces /etc/my.cnf.d/mariadb-server.cnf)
+
+[mariaddb]
+skip-networking = 0
+bind-address = 0.0.0.0
+port = 3306
+datadir = /var/lib/mysql
+socket = /run/mysqld/mysqld.sock
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+user = mysql
+pid-file = /run/mysqld/mariadb.pid
+basedir = /usr
+innodb_buffer_pool_size = 256M
