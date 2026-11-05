@@ -41,17 +41,23 @@
 #
 .PHONY: vm-box vm vm-ssh vm-destroy
 
+secrets:
+	./srcs/requirements/tools/generate-secrets.sh
+
 vm-box:
 	./vm/scripts/build-box.sh
 
 vm:
 	./vm/scripts/up.sh
 
+vm-reload:
+	cd vm && vagrant reload
+
 vm-ssh:
 	cd vm && vagrant ssh
 
 vm-destroy:
-	./vm/scripts/destroy.sh --all
+	./vm/scripts/destroy.sh
 
 #
 # ☠ FORBIDDEN: never use --link anywhere. Eval greps the Makefile and scripts.
