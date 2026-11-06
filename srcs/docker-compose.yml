@@ -63,6 +63,7 @@ services:
       - "443:443"
     volumes:
       - wordpress:/var/www/html:ro
+      - certs:/etc/nginx/ssl
     depends_on:
       wordpress:
         condition: service_healthy
@@ -93,6 +94,13 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH}/wordpress
+  certs:
+    name: inception_certs
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH}/certs
 
 secrets:
   db_password:
