@@ -48,7 +48,9 @@ source "virtualbox-iso" "debian" {
 
   vboxmanage = [
     ["modifyvm", "{{ .Name }}", "--nat-localhostreachable1", "on"],
-    ["modifyvm", "{{ .Name }}", "--rtcuseutc", "on"]
+    ["modifyvm", "{{ .Name }}", "--rtcuseutc", "on"],
+    ["modifyvm", "{{ .Name }}", "--vram", "32"],
+    ["modifyvm", "{{ .Name }}", "--graphicscontroller", "vmsvga"]
   ]
 }
 

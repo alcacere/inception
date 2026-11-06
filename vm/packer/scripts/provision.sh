@@ -130,7 +130,6 @@ fi
 
 echo "==> Configuring SSH service..."
 mkdir -p /etc/ssh/sshd_config.d
-# sshd keeps the first value it reads, and files load in name order: 00- makes these win.
 cat > /etc/ssh/sshd_config.d/00-inception.conf <<EOF
 PermitRootLogin no
 PubkeyAuthentication yes
@@ -139,8 +138,45 @@ KbdInteractiveAuthentication no
 EOF
 
 sshd -t
-# Do not reload ssh here: Packer still logs in with the password until the build ends.
-# These settings apply from the next boot, which is the first boot of the finished box.
 systemctl enable ssh
+
+echo "==> Installing minimal GUI, XFCE desktop, and Firefox..."
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y --no-install-recommends \
+    xorg \
+    xfce4 \
+    xfce4-terminal \
+    lightdm \
+    lightdm-gtk-greeter \
+    firefox-esr
+
+echo "==> Configuring LightDM auto-login for $LOGIN..."
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/01-autologin.conf <<EOF
+[Seat:*]
+autologin-user=$LOGIN
+autologin-user-timeout=0
+EOF
+
+groupadd -f autologin
+usermod -aG autologin "$LOGIN"
+
+echo "==> Creating desktop shortcut for Inception WordPress..."
+DESKTOP_DIR="/home/$LOGIN/Desktop"
+mkdir -p "$DESKTOP_DIR"
+cat > "$DESKTOP_DIR/wordpress.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Inception WordPress
+Comment=Open Inception WordPress in Firefox
+Exec=firefox-esr https://$LOGIN.42.fr
+Icon=firefox-esr
+Terminal=false
+Categories=Network;WebBrowser;
+EOF
+chown -R "$LOGIN:$LOGIN" "$DESKTOP_DIR"
+chmod +x "$DESKTOP_DIR/wordpress.desktop"
 
 echo "==> Provisioning completed successfully!"
