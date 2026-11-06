@@ -23,6 +23,8 @@ RUN apk update && apk add --no-cache \
     curl \
     fcgi
 
+RUN echo "memory_limit = 512M" > /etc/php84/conf.d/memory-limit.ini
+
 RUN ln -sf /usr/bin/php84 /usr/bin/php
 
 RUN curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
