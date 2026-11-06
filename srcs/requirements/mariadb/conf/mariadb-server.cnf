@@ -1,6 +1,5 @@
 # mariadb-server.cnf (replaces /etc/my.cnf.d/mariadb-server.cnf)
-
-[mariaddb]
+[mariadbd]
 skip-networking = 0
 bind-address = 0.0.0.0
 port = 3306

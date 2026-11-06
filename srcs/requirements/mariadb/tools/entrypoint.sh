@@ -15,11 +15,13 @@ MYSQL_USER="${MYSQL_USER:-wp_dbuser}"
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 	echo "==> initializing MariaDB data directory..."
 
-mariadb-install-db \
-	--user=mysql \
-	--datadir=/var/lib/mysql \
-	--auth-root-authentication-method=normal \
-	--skip-test-db
+	chown -R mysql:mysql /run/mysqld /var/lib/mysql
+
+	mariadb-install-db \
+		--user=mysql \
+		--datadir=/var/lib/mysql \
+		--auth-root-authentication-method=normal \
+		--skip-test-db
 
     echo "==> Configuring users and initial database..."
     mariadbd --user=mysql --bootstrap <<EOF
