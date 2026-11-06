@@ -1,68 +1,105 @@
-# docker-compose.yml                                    READ: docs/04, 05, 10
-#
-# PURPOSE
-#   Declare the whole infrastructure: services, network(s), named volumes, secrets.
-#   Called ONLY through the root Makefile.
-#
-# ☠ EVAL CHECKS ON THIS FILE
-#   - must contain `networks`        - no `network_mode: host`, no `links:`
-#   - service name == image name     - no `latest` tag, every service has `build:`
-#   - restart policy on every service
-#
-# WRITE: top level
-#   name: inception
-#
-#   services:
-#     For EACH service write:
-#       build: ./requirements/<svc>        (bonus: ./requirements/bonus/<svc>)
-#       image: <svc>:<explicit tag>        e.g. nginx:inception  (same name as the service)
-#       pull_policy: build                 never pull a DockerHub image with that name
-#       container_name: <svc>
-#       restart: unless-stopped | always   (choose one and justify it)
-#       networks: [...]
-#       env_file / environment             non-secret config only
-#       secrets: [...]                     only the ones THIS service needs (least privilege)
-#       healthcheck: { test, interval, timeout, retries, start_period }
-#       depends_on: { <svc>: { condition: service_healthy } }
-#
-#     MANDATORY
-#       mariadb    volume mariadb:/var/lib/mysql; secrets db_password, db_root_password;
-#                  NO ports (only reachable on the internal network)
-#       wordpress  volume wordpress:<web root>; secrets db_password, wp_admin_password,
-#                  wp_user_password (+ redis_password); depends_on mariadb healthy; NO ports
-#       nginx      ports ["443:443"] ← the ONLY entry point; volume wordpress:<same web root>
-#                  (read-only is enough: `:ro`); depends_on wordpress healthy
-#
-#     BONUS (consider `profiles: [bonus]` so `make` = mandatory, `make bonus` = all.
-#            Trade-off: wordpress must then cope with redis being absent)
-#       redis      secret redis_password; no volume (it's a cache, justify it)
-#       ftp        volume wordpress; ports 21 + passive range; secret ftp_password
-#       website    no ports if proxied by nginx (/portfolio/)
-#       adminer    no ports, proxied by nginx (/adminer/)
-#       blackbox   no volumes, no ports, cap_drop [ALL], no-new-privileges, read_only: true
-#       prometheus volume prometheus_data:/prometheus; proxied by nginx (/prometheus/)
-#
-#     HARDENING you can explain (optional, adds "outstanding" points)
-#       cap_drop: [ALL] + minimal cap_add, security_opt: [no-new-privileges:true],
-#       read_only + tmpfs, init: true where a process forks children (ftp),
-#       deploy.resources.limits
-#
-#   networks:
-#     at least one user-defined bridge network, e.g. `inception`.
-#     Optional design: a `backend` network with `internal: true` (mariadb, redis,
-#     wordpress, adminer, blackbox, prometheus) + a `frontend` (nginx, ftp). Explain why.
-#     Blackbox must reach its targets, so it needs the network nginx is on.
-#
-#   volumes:   (named volumes stored in /home/alcacere/data, see docs/05 §4)
-#     mariadb:   driver local, driver_opts { type: none, o: bind, device: ${DATA_PATH}/mariadb }
-#     wordpress: same pattern → ${DATA_PATH}/wordpress
-#     prometheus_data: (bonus) same pattern or a plain named volume
-#
-#   secrets:   (file paths are relative to THIS file → ../secrets/...)
-#     db_password, db_root_password, wp_admin_password, wp_user_password,
-#     ftp_password, redis_password, (opt.) prometheus_basic_auth
-#
-# CHECK
-#   docker compose -f srcs/docker-compose.yml --env-file srcs/.env config   (resolved YAML)
-#   docker compose ... ps            → all (healthy)
-#   docker volume inspect inception_mariadb | grep device → /home/alcacere/data/mariadb
+name: inception
+
+services:
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb:inception
+    container_name: mariadb
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - db_root_password
+    volumes:
+      - mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress:inception
+    container_name: wordpress
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+    volumes:
+      - wordpress:/var/www/html
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wp core is-installed --path=/var/www/html --allow-root || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  nginx:
+    build: ./requirements/nginx
+    image: nginx:inception
+    container_name: nginx
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress:/var/www/html:ro
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1:443 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  inception:
+    name: inception
+    driver: bridge
+
+volumes:
+  mariadb:
+    name: inception_mariadb
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH}/mariadb
+
+  wordpress:
+    name: inception_wordpress
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH}/wordpress
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
