@@ -5,9 +5,7 @@ set -eu
 USER_NAME="${USER:-$(whoami)}"
 
 CLUSTER_BASE=""
-if [ -d "/sgoinfre" ]; then
-	CLUSTER_BASE="/sgoinfre"
-elif [ -d "/goinfre" ]; then
+if [ -d "/goinfre" ]; then
 	CLUSTER_BASE="/goinfre"
 fi
 
@@ -17,6 +15,12 @@ if [ -z "$CLUSTER_BASE" ]; then
 fi
 
 TARGET_DIR="$CLUSTER_BASE/$USER_NAME/inception-storage"
+
+if [ ! -w "$CLUSTER_BASE" ] && [ ! -d "$CLUSTER_BASE/$USER_NAME" ]; then
+	echo "[WARNING] $CLUSTER_BASE is not writable by $USER_NAME. Falling back to standard paths."
+	exit 0
+fi
+
 echo "==> [cluster detected] configuring storage in $TARGET_DIR..."
 
 mkdir -p "$TARGET_DIR/VirtualBoxVMs"
