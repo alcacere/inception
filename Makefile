@@ -24,6 +24,10 @@ build: dirs check
 
 up: dirs check
 	$(COMPOSE) up -d --build
+	@if [ -f "$(DATA_DIR)/certs/rootCA.crt" ]; then \
+		sudo cp $(DATA_DIR)/certs/rootCA.crt /usr/local/share/ca-certificates/inception-rootCA.crt 2>/dev/null && \
+		sudo update-ca-certificates >/dev/null 2>&1 || true; \
+	fi
 
 down:
 	$(COMPOSE) down

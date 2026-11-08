@@ -153,7 +153,8 @@ apt-get install -y --no-install-recommends \
     xfce4-terminal \
     lightdm \
     lightdm-gtk-greeter \
-    firefox-esr
+    firefox-esr \
+    libnss3-tools
 
 echo "==> Configuring LightDM auto-login for $LOGIN..."
 mkdir -p /etc/lightdm/lightdm.conf.d
@@ -185,22 +186,25 @@ EOF
 chown -R "$LOGIN:$LOGIN" "$DESKTOP_DIR"
 chmod +x "$DESKTOP_DIR/wordpress.desktop"
 
-# firefox policy to avoid unknown cert warning
+# firefox policy to trust local root CA and avoid browser warnings
 
 echo "==> Configuring Firefox Enterprise Policy for local certificates..."
-mkdir -p /etc/firefox-esr/policies /etc/firefox/policies
+mkdir -p /etc/firefox-esr/policies /etc/firefox/policies /usr/lib/firefox-esr/distribution
 cat > /etc/firefox-esr/policies/policies.json <<EOF
 {
   "policies": {
     "Certificates": {
       "ImportEnterpriseRoots": true,
       "Install": [
-        "/home/$LOGIN/data/certs/inception.crt"
+        "/home/$LOGIN/data/certs/rootCA.crt"
       ]
     }
   }
 }
 EOF
 cp /etc/firefox-esr/policies/policies.json /etc/firefox/policies/policies.json
+cp /etc/firefox-esr/policies/policies.json /usr/lib/firefox-esr/distribution/policies.json
+
+echo 'pref("security.enterprise_roots.enabled", true);' >> /etc/firefox-esr/firefox-esr.js
 
 echo "==> Provisioning completed successfully!"
