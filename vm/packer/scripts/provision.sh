@@ -1,5 +1,7 @@
 #!/bin/sh
 # provision.sh - Configures Docker, users, networking, and SSH inside the Inception VM
+# now it has a new conficuration for firefox to setup the browser, add a desktop shortcut
+# and add a policy for local certificates, making self-signed ones valid for the browser
 
 set -eu
 
@@ -140,6 +142,8 @@ EOF
 sshd -t
 systemctl enable ssh
 
+# setup gui and window manager
+
 echo "==> Installing minimal GUI, XFCE desktop, and Firefox..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -162,6 +166,8 @@ EOF
 groupadd -f autologin
 usermod -aG autologin "$LOGIN"
 
+# desktop shortcut to access http://alcacere.42.fr from a firefox icon
+
 echo "==> Creating desktop shortcut for Inception WordPress..."
 DESKTOP_DIR="/home/$LOGIN/Desktop"
 mkdir -p "$DESKTOP_DIR"
@@ -178,5 +184,23 @@ Categories=Network;WebBrowser;
 EOF
 chown -R "$LOGIN:$LOGIN" "$DESKTOP_DIR"
 chmod +x "$DESKTOP_DIR/wordpress.desktop"
+
+# firefox policy to avoid unknown cert warning
+
+echo "==> Configuring Firefox Enterprise Policy for local certificates..."
+mkdir -p /etc/firefox-esr/policies /etc/firefox/policies
+cat > /etc/firefox-esr/policies/policies.json <<EOF
+{
+  "policies": {
+    "Certificates": {
+      "ImportEnterpriseRoots": true,
+      "Install": [
+        "/home/$LOGIN/data/certs/inception.crt"
+      ]
+    }
+  }
+}
+EOF
+cp /etc/firefox-esr/policies/policies.json /etc/firefox/policies/policies.json
 
 echo "==> Provisioning completed successfully!"

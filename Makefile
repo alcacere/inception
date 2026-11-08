@@ -9,7 +9,7 @@ all: up
 # setup volumes and secrets target
 
 dirs:
-	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress
+	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs
 
 secrets: 
 	@./srcs/requirements/tools/generate-secrets.sh
@@ -47,7 +47,7 @@ fclean:
 	$(COMPOSE) down -v --rmi all --remove-orphans
 	@if [ -d "$(DATA_DIR)" ]; then \
 		echo "cleaning $(DATA_DIR)..."; \
-		sudo rm -rf $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress; \
+		sudo rm -rf $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs; \
 	fi
 
 re: fclean all
@@ -62,6 +62,12 @@ vm:
 
 vm-reload:
 	cd vm && vagrant reload
+
+vm-suspend:
+	cd vm && vagrant suspend
+
+vm-resume:
+	cd vm && vagrant resume
 
 vm-ssh:
 	cd vm && vagrant ssh

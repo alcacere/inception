@@ -94,6 +94,7 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH}/wordpress
+  
   certs:
     name: inception_certs
     driver: local
