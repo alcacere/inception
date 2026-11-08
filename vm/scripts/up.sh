@@ -8,6 +8,8 @@ VM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$VM_DIR"
 
+"$SCRIPT_DIR/cluster-setup.sh"
+
 # Check if the box is registered; if not, build it automatically
 if ! vagrant box list 2>/dev/null | grep -q "^inception-debian "; then
     echo "==> Box 'inception-debian' is not yet registered. Running build-box.sh..."

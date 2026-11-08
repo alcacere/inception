@@ -8,6 +8,8 @@ VM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$VM_DIR"
 
+"$SCRIPT_DIR/cluster-setup.sh"
+
 echo "==> Checking host prerequisites..."
 for cmd in packer vagrant VBoxManage openssl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then

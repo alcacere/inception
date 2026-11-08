@@ -58,6 +58,9 @@ re: fclean all
 
 # vm targets
 
+cluster:
+	@./vm/scripts/cluster-setup.sh
+
 vm-box:
 	./vm/scripts/build-box.sh
 
@@ -80,4 +83,4 @@ vm-destroy:
 	./vm/scripts/destroy.sh
 
 .PHONY: all up build down start stop ps logs dirs secrets check clean fclean re \
-        vm-box vm vm-reload vm-ssh vm-destroy
+        cluster vm-box vm vm-reload vm-ssh vm-destroy
