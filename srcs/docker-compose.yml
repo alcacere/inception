@@ -43,6 +43,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wp core is-installed --path=/var/www/html --allow-root || exit 1"]
       interval: 5s
@@ -68,6 +70,8 @@ services:
     depends_on:
       wordpress:
         condition: service_healthy
+      adminer:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1:443 || exit 1"]
       interval: 10s
@@ -91,6 +95,24 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 5s
+  
+  adminer:
+    build: ./requirements/bonus/adminer
+    image: adminer:inception
+    container_name: adminer
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
       start_period: 5s
 
 networks:

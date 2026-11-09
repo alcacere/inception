@@ -34,4 +34,12 @@ server {
 	location ~ /\. {
 		deny all;
 	}
+
+	location ^~ /adminer {
+		fastcgi_pass adminer:9000;
+		include fastcgi_params;
+		fastcgi_param SCRIPT_FILENAME /var/www/adminer/index.php;
+		fastcgi_param PATH_INFO $fastcgi_path_info;
+		fastcgi_param HTTPS on;
+	}
 }
