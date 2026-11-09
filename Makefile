@@ -67,6 +67,12 @@ vm-box:
 vm:
 	./vm/scripts/up.sh
 
+vm-rsync:
+	cd vm && vagrant rsync
+
+vm-auto-rsync:
+	cd vm && vagrant rsync-auto
+
 vm-reload:
 	cd vm && vagrant reload
 
