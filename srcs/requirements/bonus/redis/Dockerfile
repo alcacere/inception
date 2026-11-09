@@ -1,10 +1,18 @@
-# Redis Dockerfile (bonus: WordPress object cache)       READ: docs/10 §1
-#
-# WRITE
-#   FROM alpine:3.23
-#   RUN apk add --no-cache redis gettext   (gettext only if you render the conf with envsubst)
-#   COPY conf/redis.conf.template + tools/entrypoint.sh
-#   EXPOSE 6379
-#   USER redis
-#   ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-#   CMD ["redis-server", "/etc/redis/redis.conf"]     foreground (daemonize no)
+FROM alpine:3.23
+
+RUN apk update && apk add --no-cache \
+	redis \
+	gettext
+
+COPY conf/redis.conf.template /etc/redis/redis.conf.template
+
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 6379
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["redis-server", "/etc/redis/redis.conf"]
+
