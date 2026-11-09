@@ -1,18 +1,44 @@
-# prometheus.yml                                         READ: docs/10 §5
-#
-# WRITE
-#   global:
-#     scrape_interval: 15s        how often to pull metrics
-#     evaluation_interval: 15s
-#   rule_files: [alerts.yml]
-#   scrape_configs:
-#     - job_name: prometheus      targets: ['localhost:9090']
-#     - job_name: blackbox-https  metrics_path: /probe, params: {module: [https_2xx]}
-#         static_configs targets: ['https://alcacere.42.fr']
-#         relabel_configs: the 3 standard rules (see the blackbox_exporter README)
-#         target → __param_target → instance, and __address__ = blackbox:9115
-#     - job_name: blackbox-tcp    same idea with module tcp: mariadb:3306, nginx:443, nginx:80
-#
-# CHECK  Prometheus UI → Status → Targets: every target "UP"
-#        query: probe_success
-#        (nginx:80 shows 0 on purpose: the target is up, the probe fails)
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'blackbox-https'
+    metrics_path: /probe
+    params:
+      module: [https_2xx]
+    static_configs:
+      - targets:
+          - https://nginx:443
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  - job_name: 'blackbox-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - nginx:443
+          - mariadb:3306
+          - redis:6379
+          - ftp:21
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
