@@ -154,7 +154,7 @@ Small fixes and cleanup. Quick to do, and they make the defense smoother.
 
 ## ✅ Before the defense
 
-- [ ] **Rebuild from scratch and run the eval sheet**: the MariaDB and ownership fixes only apply to a fresh install. Run `make fclean && make`, then go through the eval sheet:
+- [x] **Rebuild from scratch and run the eval sheet**: the MariaDB and ownership fixes only apply to a fresh install. Run `make fclean && make`, then go through the eval sheet:
   - its cleanup command
   - the root login without a password
   - a comment as the regular user
