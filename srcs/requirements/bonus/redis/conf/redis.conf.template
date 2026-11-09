@@ -9,3 +9,18 @@
 #
 # CHECK  docker exec redis redis-cli -a "$(cat secrets/redis_password.txt)" ping → PONG
 #        (run on the VM, reading the secret from the host file)
+
+bind 0.0.0.0
+port ${REDIS_PORT}
+protected-mode yes
+
+requirepass ${REDIS_PASSWORD}
+
+daemonize no
+logfile ""
+
+maxmemory 128mb
+maxmemory-policy allkeys-lru
+
+save ""
+appendonly no
