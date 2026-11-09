@@ -10,7 +10,8 @@ all: up
 
 dirs:
 	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs $(DATA_DIR)/prometheus
-	@sudo chmod -R 777 $(DATA_DIR)/prometheus 2>/dev/null || true
+	@sudo chown -R 100:101 $(DATA_DIR)/prometheus 2>/dev/null || true
+	@chmod 750 $(DATA_DIR)/prometheus 2>/dev/null || true
 
 secrets: 
 	@./srcs/requirements/tools/generate-secrets.sh
@@ -90,4 +91,4 @@ vm-destroy:
 	./vm/scripts/destroy.sh
 
 .PHONY: all up build down start stop ps logs dirs secrets check clean fclean re \
-        cluster vm-box vm vm-reload vm-ssh vm-destroy
+        cluster vm-box vm vm-rsync vm-auto-rsync vm-reload vm-suspend vm-resume vm-ssh vm-destroy

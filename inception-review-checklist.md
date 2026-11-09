@@ -74,7 +74,7 @@ A bonus failure that takes the site down, possible data loss, or a broken bonus.
 
 Security and correctness problems an evaluator could ask you about.
 
-- [ ] **`chmod -R 755` makes `wp-config.php` readable by everyone**
+- [x] **`chmod -R 755` makes `wp-config.php` readable by everyone**
   - **Where:** `wordpress/tools/entrypoint.sh:58`
   - **Problem:** on every start, every file becomes `755`, including `wp-config.php` with the database and Redis passwords in plain text.
   - **Why it matters:** any user on the VM can read `/home/alcacere/data/wordpress/wp-config.php`. Marking every file as executable is wrong too.
@@ -97,13 +97,13 @@ Security and correctness problems an evaluator could ask you about.
     - Update Adminer's version and SHA-256.
     - Optionally, limit Adminer's server field to `mariadb`.
 
-- [ ] **A fresh clone gets new passwords that don't match the old data**
+- [x] **A fresh clone gets new passwords that don't match the old data**
   - **Where:** `srcs/requirements/tools/generate-secrets.sh`
   - **Problem:** if `secrets/` is regenerated while `/home/alcacere/data` still holds the old database and WordPress install, the files no longer match the accounts. The site keeps working, because `wp-config.php` keeps the old password.
   - **Why it matters:** an evaluator who follows your docs and logs in with `secrets/wp_admin_password.txt` is refused.
   - **Fix:** in `generate-secrets.sh`, refuse to create a secret when the data folders already exist, and point to `make fclean` instead.
 
-- [ ] **Your local root CA can vouch for any website**
+- [x] **Your local root CA can vouch for any website**
   - **Where:** `nginx/tools/entrypoint.sh:11-14`, `Makefile:28-31`, `provision.sh:191-208`
   - **Problem:** the CA has no name constraints. The VM's system trust store and Firefox both trust it, and `rootCA.key` sits in `/home/alcacere/data/certs`.
   - **Why it matters:** anyone who reads that key can impersonate any site to that browser. The eval sheet says the certificate "doesn't have to be recognized", so this is an extra. Your two-tier reasoning is correct.
@@ -123,7 +123,7 @@ Security and correctness problems an evaluator could ask you about.
     force_local_data_ssl=YES
     ```
 
-- [ ] **The copied snake game has no credit**
+- [x] **The copied snake game has no credit**
   - **Where:** `bonus/website/site/index.html`
   - **Problem:** your commit message says the snake game was copied from a public GitHub repo, but the code doesn't credit it.
   - **Why it matters:** it's a licence problem, and the subject's AI rules say you must fully understand what you submit.
@@ -135,9 +135,9 @@ Security and correctness problems an evaluator could ask you about.
 
 Small fixes and cleanup. Quick to do, and they make the defense smoother.
 
-- [ ] **Remove the stray `[wordpress` file**: an empty file named `[wordpress` was committed in `96c389d`. It's deleted locally but still in the repo. Run `git rm '[wordpress'`.
-- [ ] **Replace `chmod 777` on Prometheus data** (`Makefile:13`): `sudo chmod -R 777` gives everyone write access. Use `sudo chown -R 100:101 $(DATA_DIR)/prometheus`, since 100:101 is the `prometheus` user in Alpine 3.23.
-- [ ] **Complete `.PHONY`** (`Makefile:92`): add `vm-rsync`, `vm-auto-rsync`, `vm-suspend` and `vm-resume`.
+- [x] **Remove the stray `[wordpress` file**: an empty file named `[wordpress` was committed in `96c389d`. It's deleted locally but still in the repo. Run `git rm '[wordpress'`.
+- [x] **Replace `chmod 777` on Prometheus data** (`Makefile:13`): `sudo chmod -R 777` gives everyone write access. Use `sudo chown -R 100:101 $(DATA_DIR)/prometheus`, since 100:101 is the `prometheus` user in Alpine 3.23.
+- [x] **Complete `.PHONY`** (`Makefile:92`): add `vm-rsync`, `vm-auto-rsync`, `vm-suspend` and `vm-resume`.
 - [ ] **Define the data path once** (`Makefile:1-2`, `srcs/.env`): `DATA_DIR` and `DATA_PATH` set the same path twice. Read it from `srcs/.env`.
 - [ ] **Use or remove unused variables** (`srcs/.env.example`, `check-env.sh`): `CERT_*` is checked but the cert subject is hardcoded. `MYSQL_HOST`, `PROMETHEUS_RETENTION` (hardcoded `7d`) and `REDIS_PORT` in WordPress aren't used. Use them or delete them.
 - [ ] **MariaDB healthcheck logs "Access denied" every 5 s** (`docker-compose.yml:20`): `mariadb-admin ping` without credentials still succeeds, but MariaDB logs a warning each time. Accept it and be ready to explain it, or use a dedicated healthcheck user.

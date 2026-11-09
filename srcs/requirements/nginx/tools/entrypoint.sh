@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -eu
 
 mkdir -p /etc/nginx/ssl /run/nginx /etc/nginx/http.d
@@ -6,21 +7,19 @@ mkdir -p /etc/nginx/ssl /run/nginx /etc/nginx/http.d
 if [ ! -f /etc/nginx/ssl/inception.crt ] || [ ! -f /etc/nginx/ssl/inception.key ]; then
 	echo "[INFO] generating 2-tier TLS certificates for ${DOMAIN_NAME}..."
 
-	# 1. Root CA
 	if [ ! -f /etc/nginx/ssl/rootCA.crt ] || [ ! -f /etc/nginx/ssl/rootCA.key ]; then
-		openssl req -x509 -new -nodes -keyout /etc/nginx/ssl/rootCA.key -out /etc/nginx/ssl/rootCA.crt -days 3650 \
+			openssl req -x509 -new -nodes -keyout /etc/nginx/ssl/rootCA.key -out /etc/nginx/ssl/rootCA.crt -days 3650 \
 			-subj "/C=ES/ST=Madrid/L=Madrid/O=42Madrid/CN=Inception Local Root CA" \
 			-addext "basicConstraints=critical,CA:TRUE" \
-			-addext "keyUsage=critical,keyCertSign,cRLSign"
+			-addext "keyUsage=critical,keyCertSign,cRLSign" \
+			-addext "nameConstraints=critical,permitted;DNS:${DOMAIN_NAME:-alcacere.42.fr}"
 		chmod 600 /etc/nginx/ssl/rootCA.key
 		chmod 644 /etc/nginx/ssl/rootCA.crt
 	fi
 
-	# 2. Server leaf key & CSR
 	openssl req -new -nodes -keyout /etc/nginx/ssl/inception.key -out /tmp/inception.csr \
 		-subj "/C=ES/ST=Madrid/L=Madrid/O=42Madrid/CN=${DOMAIN_NAME}"
 
-	# 3. Sign server leaf with Root CA
 	openssl x509 -req -in /tmp/inception.csr -CA /etc/nginx/ssl/rootCA.crt -CAkey /etc/nginx/ssl/rootCA.key -CAcreateserial \
 		-out /etc/nginx/ssl/inception.crt -days 365 \
 		-extfile - <<EOF

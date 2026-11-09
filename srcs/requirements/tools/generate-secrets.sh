@@ -1,11 +1,3 @@
-#!/bin/sh
-#
-# PURPOSE
-#   Make a fresh `git clone` runnable without committing any credential:
-#   create every missing secret file with a random password, and create
-#   srcs/.env from srcs/.env.example if it's missing.
-#
-
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -17,6 +9,23 @@ umask 077
 mkdir -p secrets
 
 echo "==> Configuring secrets in secrets/..."
+
+DATA_PATH="/home/${LOGIN:-alcacere}/data"
+if [ -d "$DATA_PATH/mariadb" ] || [ -d "$DATA_PATH/wordpress" ]; then
+    missing=0
+    for name in db_password db_root_password wp_admin_password wp_user_password ftp_password redis_password; do
+        if [ ! -s "secrets/${name}.txt" ]; then
+            missing=1
+            break
+        fi
+    done
+    if [ "$missing" -eq 1 ]; then
+        echo "[ERROR] Existing data detected at $DATA_PATH but secrets are missing!" >&2
+        echo "Generating new random secrets would desync from the existing database." >&2
+        echo "Run 'make fclean' to clean old persistent data first, or restore your secrets." >&2
+        exit 1
+    fi
+fi
 
 for name in \
     db_password \

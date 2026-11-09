@@ -55,7 +55,10 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 fi
 
 chown -R www:www /var/www/html
-chmod -R 755 /var/www/html
+
+find /var/www/html -type d -exec chmod 755 {} +
+find /var/www/html -type f -exec chmod 644 {} +
+chmod 640 /var/www/html/wp-config.php
 
 echo "[INFO] starting PHP-FPM..."
 
