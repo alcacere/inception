@@ -2,12 +2,14 @@ FROM alpine:3.23
 
 RUN apk update && apk add --no-cache prometheus \
 	&& mkdir -p /prometheus \
-	&& chown -R prometheus:pometheus /prometheus
+	&& chown -R prometheus:prometheus /prometheus
 
 COPY conf/prometheus.yml /etc/prometheus/prometheus.yml
 COPY conf/alerts.yml /etc/prometheus/alerts.yml
 
 USER prometheus
+
+EXPOSE 9090
 
 VOLUME ["/prometheus"]
 

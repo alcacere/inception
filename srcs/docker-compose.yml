@@ -74,6 +74,8 @@ services:
         condition: service_healthy
       website:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1:443 || exit 1"]
       interval: 10s
@@ -160,6 +162,41 @@ services:
       retries: 3
       start_period: 3s
 
+  blackbox:
+    build: ./requirements/bonus/blackbox
+    image: blackbox:inception
+    container_name: blackbox
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9115/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+
+  prometheus:
+    build: ./requirements/bonus/prometheus
+    image: prometheus:inception
+    container_name: prometheus
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    volumes:
+      - prometheus:/prometheus
+    depends_on:
+      blackbox:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+
 networks:
   inception:
     name: inception
@@ -189,6 +226,14 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH}/certs
+
+  prometheus:
+    name: inception_prometheus
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH}/prometheus
 
 secrets:
   db_password:

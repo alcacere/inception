@@ -9,7 +9,8 @@ all: up
 # setup volumes and secrets target
 
 dirs:
-	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs
+	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs $(DATA_DIR)/prometheus
+	@sudo chmod -R 777 $(DATA_DIR)/prometheus 2>/dev/null || true
 
 secrets: 
 	@./srcs/requirements/tools/generate-secrets.sh
@@ -51,7 +52,7 @@ fclean:
 	$(COMPOSE) down -v --rmi all --remove-orphans
 	@if [ -d "$(DATA_DIR)" ]; then \
 		echo "cleaning $(DATA_DIR)..."; \
-		sudo rm -rf $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs; \
+		sudo rm -rf $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress $(DATA_DIR)/certs $(DATA_DIR)/prometheus; \
 	fi
 
 re: fclean all
