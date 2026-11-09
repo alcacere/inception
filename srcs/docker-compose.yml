@@ -37,6 +37,7 @@ services:
       - db_password
       - wp_admin_password
       - wp_user_password
+      - redis_password
     volumes:
       - wordpress:/var/www/html
     depends_on:
@@ -72,6 +73,25 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  redis:
+    build: ./requirements/bonus/redis
+    image: redis:inception
+    container_name: redis
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    env_file:
+      - .env
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/redis_password) ping | grep PONG || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
 networks:
   inception:
@@ -112,3 +132,5 @@ secrets:
     file: ../secrets/wp_admin_password.txt
   wp_user_password:
     file: ../secrets/wp_user_password.txt
+  redis_password:
+    file: ../secrets/redis_password.txt

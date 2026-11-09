@@ -19,6 +19,7 @@ RUN apk update && apk add --no-cache \
     php84-iconv \
     php84-fileinfo \
     php84-openssl \
+	php84-pecl-redis \
     mariadb-client \
     curl \
     fcgi
