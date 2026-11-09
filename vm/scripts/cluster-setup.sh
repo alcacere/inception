@@ -35,22 +35,31 @@ if command -v VBoxManage >/dev/null 2>&1; then
 	fi
 fi
 
-if [ ! -L "$HOME/.vagrant.d" ] || [ "$(readlink "$HOME/.vagrant.d")" != "$TARGET_DIR/vagrant.d" ]; then
-	echo "-> redirecting ~/.vagrant.d to $TARGET_DIR/vagrant.d"
-	rm -rf "$HOME/.vagrant.d"
-	ln -sfn "$TARGET_DIR/vagrant.d" "$HOME/.vagrant.d"
-fi
+safe_link() {
+	src="$1"
+	dst="$2"
 
+	if [ -L "$src" ] && [ "$(readlink "$src")" = "$dst" ]; then
+		return 0
+	fi
+
+	if [ -d "$src" ] && [ ! -L "$src" ]; then
+		if [ -n "$(ls -A "$src" 2>/dev/null)" ]; then
+			echo "-> migrating existing data from $src to $dst..."
+			cp -an "$src/." "$dst/" 2>/dev/null || true
+		fi
+		rm -rf "$src"
+	elif [ -L "$src" ]; then
+		rm -f "$src"
+	fi
+
+	ln -sfn "$dst" "$src"
+}
+
+echo "-> safely redirecting cache and VM folders to /goinfre..."
+safe_link "$HOME/.vagrant.d" "$TARGET_DIR/vagrant.d"
 mkdir -p "$HOME/.cache"
-if [ ! -L "$HOME/.cache/packer" ] || [ "$(readlink "$HOME/.cache/packer")" != "$TARGET_DIR/packer_cache" ]; then
-	echo "-> redirecting ~/.cache/packer to $TARGET_DIR/packer_cache"
-	rm -rf "$HOME/.cache/packer"
-	ln -sfn "$TARGET_DIR/packer_cache" "$HOME/.cache/packer"
-fi
-
-if [ ! -L "$HOME/VirtualBox VMs" ] || [ "$(readlink "$HOME/VirtualBox VMs")" != "$TARGET_DIR/VirtualBoxVMs" ]; then
-	rm -rf "$HOME/VirtualBox VMs"
-	ln -sfn "$TARGET_DIR/VirtualBoxVMs" "$HOME/VirtualBox VMs"
-fi
+safe_link "$HOME/.cache/packer" "$TARGET_DIR/packer_cache"
+safe_link "$HOME/VirtualBox VMs" "$TARGET_DIR/VirtualBoxVMs"
 
 echo "==> [cluster] NFS cluster disk is protecred"

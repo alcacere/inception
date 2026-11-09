@@ -39,7 +39,7 @@ Each of these can end the evaluation on its own. Fix these first.
 
 A bonus failure that takes the site down, possible data loss, or a broken bonus.
 
-- [ ] **NGINX can't start unless every bonus service is healthy**
+- [x] **NGINX can't start unless every bonus service is healthy**
   - **Where:** `srcs/docker-compose.yml:43-47, 70-78`
   - **Problem:** `nginx` waits for `adminer`, `website` and `prometheus` to be healthy, and `wordpress` waits for `redis`.
   - **Why it matters:** if one bonus container fails its healthcheck, the WordPress site never comes up. The mandatory part must work "without any malfunctions", so a bonus problem costs you the mandatory part and the bonus with it.
@@ -53,13 +53,13 @@ A bonus failure that takes the site down, possible data loss, or a broken bonus.
     }
     ```
 
-- [ ] **`cluster-setup.sh` can delete your virtual machines**
+- [x] **`cluster-setup.sh` can delete your virtual machines**
   - **Where:** `vm/scripts/cluster-setup.sh:40, 47, 52`
   - **Problem:** when `/goinfre` exists, it runs `rm -rf ~/.vagrant.d`, `~/.cache/packer` and `~/VirtualBox VMs` without asking. `make vm` and `make vm-box` call it automatically.
   - **Why it matters:** on a school computer, the first `make vm` deletes every VM disk and Vagrant box you have, other projects' included. It also changes VirtualBox's VM folder for every project.
   - **Fix:** only create a link when the folder is missing or empty. If it has content, move it with `mv` or stop with a message. Run it only through `make cluster`, not from `up.sh` and `build-box.sh`.
 
-- [ ] **WordPress and FTP fight over file ownership**
+- [x] **WordPress and FTP fight over file ownership**
   - **Where:** `wordpress/tools/entrypoint.sh:57`, `bonus/ftp/tools/entrypoint.sh:30`
   - **Problem:** WordPress runs `chown -R nobody` (UID 65534) on every start. FTP runs `chown -R 1000:1000` on the same volume, and it starts last, so it wins.
   - **Why it matters:** PHP runs as `nobody`, so it can't write: media uploads and plugin and core updates fail. If WordPress restarts, FTP loses write access instead. The eval sheet says to test that each bonus service works.

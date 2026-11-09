@@ -54,7 +54,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 		echo "[INFO] wordpress is alredy installed. skipping initial setup"
 fi
 
-chown -R nobody:nobody /var/www/html
+chown -R www:www /var/www/html
 chmod -R 755 /var/www/html
 
 echo "[INFO] starting PHP-FPM..."

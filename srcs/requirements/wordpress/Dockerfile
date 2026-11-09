@@ -33,7 +33,9 @@ RUN curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh
 
 WORKDIR /var/www/html
 
-RUN chown -R nobody:nobody /var/www/html
+RUN adduser -D -H -u 1000 -s /sbin/nologin www
+
+RUN chown -R www:www /var/www/html
 
 COPY conf/www.conf /etc/php84/php-fpm.d/www.conf
 
