@@ -9,3 +9,26 @@
 #   Skip ICMP: it needs an extra capability, and nothing here requires it.
 #
 # CHECK  probe_tls_version_info shows TLS 1.2 or 1.3
+
+modules:
+  https_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200, 301, 302]
+      method: GET
+      fail_if_not_ssl: true
+      tls_config:
+        insecure_skip_verify: true
+  tls_old:
+    prober: http
+    timeout: 5s
+    http:
+      fail_if_not_ssl: true
+      tls_config:
+        max_version: "TLS11"
+        insecure_skip_verify: true
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
