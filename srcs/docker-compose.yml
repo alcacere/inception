@@ -72,6 +72,8 @@ services:
         condition: service_healthy
       adminer:
         condition: service_healthy
+      website:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1:443 || exit 1"]
       interval: 10s
@@ -114,6 +116,21 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+
+  website:
+    build: ./requirements/bonus/website
+    image: website:inception
+    container_name: website
+    pull_policy: build
+    restart: unless-stopped
+    networks:
+      - inception
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
 
 networks:
   inception:

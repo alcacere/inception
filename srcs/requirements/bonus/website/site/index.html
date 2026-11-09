@@ -1,9 +1,168 @@
-<!--
-index.html                                               READ: docs/10 §3
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>alcacere — Developer Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header / Hero Section -->
+        <header class="hero">
+            <span class="badge">42 Madrid Student</span>
+            <h1>alcacere</h1>
+            <p class="role">Software & Infrastructure Developer</p>
+            <p class="bio">Building robust, containerized environments and system-level applications in C, C++, and Docker.</p>
+            <div class="actions">
+                <button id="toggleGameBtn" class="btn primary">🕹️ Play Retro Snake</button>
+                <a href="/" class="btn secondary">🌐 WordPress</a>
+                <a href="/adminer" class="btn secondary">🗄️ Adminer DB</a>
+            </div>
+        </header>
 
-WRITE: your static page (NO PHP). Content ideas:
-  - CV / portfolio, or
-  - an "Inception architecture" page: a diagram of VM → containers → volumes,
-    the list of services with links (/, /wp-admin, /adminer, /prometheus/)
-Use RELATIVE links (style.css, not /style.css) because the site is served under /portfolio/.
--->
+        <!-- Hidden Game Section (Toggled by button) -->
+        <section id="gameSection" class="game-section hidden">
+            <div class="game-box">
+                <h2>🐍 42 ARCADE SNAKE</h2>
+                <div id="score-board">Score: <span id="score">0</span></div>
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                <div class="instructions">Use <b>Arrow Keys</b> or <b>W, A, S, D</b> to navigate</div>
+            </div>
+        </section>
+
+        <!-- Featured Projects -->
+        <section class="projects">
+            <h2>Featured Projects</h2>
+            <div class="grid">
+                <div class="card">
+                    <span class="card-tag">DevOps & Microservices</span>
+                    <h3>Inception</h3>
+                    <p>Docker Compose microservice architecture: NGINX TLS 1.3, WordPress on FastCGI, MariaDB, Redis caching, Adminer, FTP, and Prometheus.</p>
+                </div>
+                <div class="card">
+                    <span class="card-tag">UNIX Systems Programming</span>
+                    <h3>Minishell</h3>
+                    <p>POSIX shell written in C supporting pipelines, AST commands, heredocs, signal handling, and environment variables.</p>
+                </div>
+                <div class="card">
+                    <span class="card-tag">Algorithms</span>
+                    <h3>Push_swap</h3>
+                    <p>Two-stack sorting algorithm optimizing instruction sequences using chunk sorting and radix logic.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Hosted on Alpine Linux 3.23 &bull; Built with BusyBox httpd &bull; alcacere.42.fr</p>
+        </footer>
+    </div>
+
+    <script>
+        const btn = document.getElementById("toggleGameBtn");
+        const section = document.getElementById("gameSection");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        let snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+        let food = { x: 5, y: 5 };
+        let dx = 1, dy = 0;
+        let score = 0;
+        let changingDirection = false;
+        let gameInterval = null;
+
+        btn.addEventListener("click", () => {
+            const isHidden = section.classList.toggle("hidden");
+            if (!isHidden) {
+                btn.innerText = "❌ Close Snake";
+                resetGame();
+                if (!gameInterval) gameInterval = setInterval(gameLoop, 90);
+                section.scrollIntoView({ behavior: "smooth" });
+            } else {
+                btn.innerText = "🕹️ Play Retro Snake";
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+        });
+
+        function gameLoop() {
+            if (hasGameEnded()) {
+                alert("Game Over! Score: " + score);
+                resetGame();
+            }
+            changingDirection = false;
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = "#161b22";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSnake() {
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? "#3fb950" : "#238636";
+                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 1, gridSize - 1);
+            });
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            if (snake[0].x === food.x && snake[0].y === food.y) {
+                score += 10;
+                scoreElement.innerText = score;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+            snake.forEach(part => {
+                if (part.x === food.x && part.y === food.y) generateFood();
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "#f85149";
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 1, gridSize - 1);
+        }
+
+        function hasGameEnded() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) return true;
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) return true;
+            }
+            return false;
+        }
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+            dx = 1; dy = 0; score = 0;
+            scoreElement.innerText = score;
+            generateFood();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            const k = e.keyCode;
+            if (changingDirection) return;
+            if ((k === 37 || k === 65) && dx !== 1) { dx = -1; dy = 0; changingDirection = true; }
+            if ((k === 38 || k === 87) && dy !== 1) { dx = 0; dy = -1; changingDirection = true; }
+            if ((k === 39 || k === 68) && dx !== -1) { dx = 1; dy = 0; changingDirection = true; }
+            if ((k === 40 || k === 83) && dy !== -1) { dx = 0; dy = 1; changingDirection = true; }
+        });
+    </script>
+</body>
+</html>
