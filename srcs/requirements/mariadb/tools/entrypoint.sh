@@ -25,9 +25,9 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 
     echo "==> Configuring users and initial database..."
     mariadbd --user=mysql --bootstrap <<EOF
-FLUSH PRIVILEGES;
+	FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
-DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.global_priv WHERE User='' OR (User='root' AND Host != 'localhost');
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
