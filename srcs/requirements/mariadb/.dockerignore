@@ -1,4 +1,7 @@
-# .dockerignore                                          READ: docs/03
-# PURPOSE: exclude files from the build context sent to the Docker daemon.
-# WRITE: patterns for anything the image does not need, e.g.
-#   *.md, .git, .env, *.swp
+.git
+.gitignore
+*.md
+*.swp
+*.bak
+*.tmp
+.DS_Store

@@ -1,11 +1,4 @@
 #!/bin/sh
-# check-env.sh (runs on the VM host, called by `make` before `up`)    READ: docs/01, 09
-#
-# PURPOSE
-#   Fail EARLY with a clear message instead of a half-started stack.
-#
-# WRITE (`set -eu`)
-
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"

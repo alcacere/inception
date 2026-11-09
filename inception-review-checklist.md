@@ -12,7 +12,7 @@ Tick a box by changing `[ ]` to `[x]`.
 
 Each of these can end the evaluation on its own. Fix these first.
 
-- [ ] **Write `README.md`, `USER_DOC.md` and `DEV_DOC.md`**
+- [x] **Write `README.md`, `USER_DOC.md` and `DEV_DOC.md`**
   - **Where:** `README.md`, `USER_DOC.md`, `DEV_DOC.md`
   - **Problem:** all three still contain only the skeleton comment blocks. The README's first line is `<!--`.
   - **Why it matters:** the subject lists them under "Prerequisites for validation". The README needs the italic first line, the Description, Instructions, Resources and Project description sections, the four comparisons, and a description of how AI was used.
@@ -147,7 +147,7 @@ Small fixes and cleanup. Quick to do, and they make the defense smoother.
 - [ ] **Tighten `/run/mysqld` and drop `apk update`** (`mariadb/Dockerfile:9`, all Dockerfiles): `chmod 777 /run/mysqld` is wider than needed, so use `755`. `apk update &&` before `--no-cache` leaves a package index in the image, so remove it.
 - [ ] **Probe that port 80 is closed and old TLS is refused** (`bonus/blackbox/conf/blackbox.yml`, `prometheus/conf/*`): the `tls_old` module is never used, and nothing probes `nginx:80`. Add those probes plus `Port80Open` and `OldTlsAccepted` alerts. They prove the subject's rules live, which makes a good justification for your free choice.
 - [ ] **Note the GUI autologin trade-off** (`vm/packer/scripts/provision.sh:159-168`, `docs/02`): autologin plus passwordless `sudo` means anyone at the VirtualBox window is root. That's fine for a local VM, but mention it at the defense. My sentence in `docs/02` saying nobody can log in on the console is now wrong, so fix it.
-- [ ] **Delete leftover skeleton comments** (FTP `Dockerfile`, `blackbox.yml`, `check-env.sh`, 9 × `.dockerignore`): AI-written "WRITE:" instructions sit next to your code, and every `.dockerignore` is only comments. Delete the comments, and give each `.dockerignore` real patterns.
+- [x] **Delete leftover skeleton comments** (FTP `Dockerfile`, `blackbox.yml`, `check-env.sh`, 9 × `.dockerignore`): AI-written "WRITE:" instructions sit next to your code, and every `.dockerignore` is only comments. Delete the comments, and give each `.dockerignore` real patterns.
 - [ ] **Decide what to do with `docs/`**: it's AI-written, partly out of date (it still describes a single self-signed certificate), and contains the forbidden words as warnings. Remove it from the repo you submit, or label it as AI study notes in the README.
 
 ---
