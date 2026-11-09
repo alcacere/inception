@@ -11,7 +11,7 @@ fi
 
 FTP_USER="${FTP_USER:-ftp_user}"
 
-if ! if "$FTP_USER" >/dev/null 2>&1; then
+if ! id "$FTP_USER" >/dev/null 2>&1; then
 	adduser -D -h /var/www/html -s /bin/sh -u 1000 "$FTP_USER"
 fi
 
