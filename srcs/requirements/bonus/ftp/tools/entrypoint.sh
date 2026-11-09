@@ -20,7 +20,7 @@ unset FTP_PASSWORD
 
 FTP_PASV_ADDRESS="${FTP_PASV_ADDRESS:-192.168.56.42}"
 if ! grep -q "^pasv_address=" /etc/vsftpd/vsftpd.conf; then
-	echo "pasv_address=${FTP_PASV_ADDRESS}" >> /etc/vsftpd/vsftpd.conf
+	printf "\npasv_address=%s\n" "${FTP_PASV_ADDRESS}" >> /etc/vsftpd/vsftpd.conf
 else
 	sed -i "s/^pasv_address=.*/pasv_address=${FTP_PASV_ADDRESS}/" /etc/vsftpd/vsftpd.conf
 fi
