@@ -38,6 +38,9 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 	--role="${WP_USER_ROLE:-author}" \
 	--user_pass="${WP_USER_PASSWORD}"
 
+	wp option update comment_previously_approved 0 --allow-root --path=/var/www/html
+	wp option update comment_moderation 0 --allow-root --path=/var/www/html
+
 	echo "[INFO] configuring redis object cache.."
 	wp config set WP_REDIS_HOST "redis" --allow-root --path=/var/www/html
 	wp config set WP_REDIS_TIMEOUT 1 --raw --allow-root --path=/var/www/html

@@ -46,9 +46,10 @@ safe_link() {
 	if [ -d "$src" ] && [ ! -L "$src" ]; then
 		if [ -n "$(ls -A "$src" 2>/dev/null)" ]; then
 			echo "-> migrating existing data from $src to $dst..."
-			cp -an "$src/." "$dst/" 2>/dev/null || true
+			cp -a "$src/." "$dst/" && rm -rf "$src" || { echo "[ERROR] could not migrate $src to $dst, original preserved" >&2; exit 1; }
+		else
+			rm -rf "$src"
 		fi
-		rm -rf "$src"
 	elif [ -L "$src" ]; then
 		rm -f "$src"
 	fi

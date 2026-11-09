@@ -69,7 +69,7 @@ services:
       wordpress:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1:443 || exit 1"]
+      test: ["CMD-SHELL", "nginx -t && wget --no-check-certificate -q --spider https://127.0.0.1/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

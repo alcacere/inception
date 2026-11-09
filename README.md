@@ -95,10 +95,13 @@ make fclean
 * [Redis Documentation](https://redis.io/docs/)
 * [vsftpd Configuration Reference](https://security.appspot.com/vsftpd/vsftpd_conf.html)
 * [Prometheus & Blackbox Exporter Docs](https://prometheus.io/docs/)
-* [HTML5 Canvas Snake Game](https://github.com/) (Open-source MIT reference customized for the portfolio)
+* [HTML5 Canvas Snake Game](https://gist.github.com/straker/81b49bfa7ba68670432d8202df1e3016) (Open-source MIT reference customized for the portfolio)
 
 ### Use of Artificial Intelligence
-Artificial Intelligence was utilized strictly as an advisory assistant throughout this project. It was used to help structure project documentation, understand Linux system administration concepts (such as Mozilla PKIX certificate constraints and Docker networking), and debug configuration edge cases. The architecture design, file authoring, implementation choices, and verification were performed and validated directly by the student.
+Artificial Intelligence was utilized across specific areas of this project in accordance with 42 curriculum guidelines:
+* **Documentation & Skeletons**: AI assisted in structuring documentation templates (`DEV_DOC.md`, `USER_DOC.md`, and parts of `README.md`) and clarifying Linux administration concepts (such as RFC 5280 PKI constraints, vsftpd quirks, and Alpine package applets).
+* **Static Bonus Portfolio Website**: The HTML5/CSS portfolio page under `srcs/requirements/bonus/website/site/` was generated with AI assistance. The embedded retro arcade game was adapted from an open-source HTML5 Canvas implementation ([Straker HTML5 Canvas Snake](https://gist.github.com/straker/81b49bfa7ba68670432d8202df1e3016), MIT License).
+* **Student Implementation**: All system infrastructure components—including Dockerfiles, service entrypoints, NGINX TLS reverse proxy rules, user/group permission models (UID 1000 isolation), MariaDB SQL bootstrapping, and Makefile automation—were designed, configured, debugged, and validated by the student.
 
 ---
 
@@ -132,7 +135,7 @@ All services are containerized individually using lightweight **Alpine Linux 3.2
 * **Environment Variables**:
   Stored in process memory tables (`/proc/<pid>/environ`). They are inherited by all child processes, visible in `docker inspect <container>`, visible in `docker compose ps` / process lists, and frequently printed in debugging traces or crash logs. They are ideal for non-sensitive configuration (e.g., `DOMAIN_NAME`, `REDIS_PORT`).
 * **Docker Secrets**:
-  Secrets are mounted in-memory as read-only files under `/run/secrets/<secret_name>` with restricted permissions (e.g., `0400` or `0440`). They are never recorded in container image layers, do not show up in `docker inspect`, and are not inherited by child process environments, making them the industry standard for managing passwords, database credentials, and cryptographic keys.
+  In Docker Compose (without Swarm), secrets are bind-mounted as read-only files under `/run/secrets/<secret_name>` inside the container. This prevents plaintext credentials from being baked into image layers, environment variables, or shell history. Applications read them directly from disk files via file descriptors rather than exposing credentials in environment tables or command-line process lists.
 
 ## Docker Network vs Host Network
 

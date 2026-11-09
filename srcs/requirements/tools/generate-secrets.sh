@@ -1,3 +1,4 @@
+#!/bin/sh
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -11,7 +12,7 @@ mkdir -p secrets
 echo "==> Configuring secrets in secrets/..."
 
 DATA_PATH="/home/${LOGIN:-alcacere}/data"
-if [ -d "$DATA_PATH/mariadb" ] || [ -d "$DATA_PATH/wordpress" ]; then
+if [ -d "$DATA_PATH/mariadb/mysql" ] || [ -f "$DATA_PATH/wordpress/wp-config.php" ]; then
     missing=0
     for name in db_password db_root_password wp_admin_password wp_user_password ftp_password redis_password; do
         if [ ! -s "secrets/${name}.txt" ]; then

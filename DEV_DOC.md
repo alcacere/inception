@@ -29,7 +29,7 @@ make vm-ssh
 ```
 
 ### Configuration & Secret Generation
-On initial setup, running `make` automatically executes [srcs/requirements/tools/generate-secrets.sh](file:///home/alcacere/inception/alcacere_inception/srcs/requirements/tools/generate-secrets.sh), which:
+On initial setup, running `make` automatically executes [generate-secrets.sh](srcs/requirements/tools/generate-secrets.sh), which:
 1. Copies `srcs/.env.example` to `srcs/.env` if not present.
 2. Generates cryptographically secure 24-character random passwords in `secrets/*.txt`:
 
@@ -87,7 +87,7 @@ On initial setup, running `make` automatically executes [srcs/requirements/tools
 
 ## 3. Makefile Targets & Compose Automation
 
-The root [Makefile](file:///home/alcacere/inception/alcacere_inception/Makefile) wraps all operations to prevent manual syntax errors:
+The root [Makefile](Makefile) wraps all operations to prevent manual syntax errors:
 
 | Make Target | Action Performed | Underlying Command |
 | :--- | :--- | :--- |
@@ -108,7 +108,7 @@ The root [Makefile](file:///home/alcacere/inception/alcacere_inception/Makefile)
 
 All persistent data must survive container restarts, reboots, and `make down`. The subject requires storing all data inside `/home/alcacere/data`.
 
-In [srcs/docker-compose.yml](file:///home/alcacere/inception/alcacere_inception/srcs/docker-compose.yml), this is achieved using **bind-backed named volumes**:
+In [docker-compose.yml](srcs/docker-compose.yml), this is achieved using **bind-backed named volumes**:
 
 ```yaml
 volumes:
@@ -169,7 +169,7 @@ chmod 640 /var/www/html/wp-config.php
 `wp-config.php` is restricted to `0640`, preventing unprivileged users on the host from reading database credentials.
 
 ### 3. Dynamic DNS & Bonus Isolation
-In [inception.conf.template](file:///home/alcacere/inception/alcacere_inception/srcs/requirements/nginx/conf/inception.conf.template), bonus services are routed using runtime variables and Docker's internal DNS resolver:
+In [inception.conf.template](srcs/requirements/nginx/conf/inception.conf.template), bonus services are routed using runtime variables and Docker's internal DNS resolver:
 ```nginx
 resolver 127.0.0.11 valid=10s ipv6=off;
 

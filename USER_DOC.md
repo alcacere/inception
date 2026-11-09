@@ -12,8 +12,8 @@ Welcome to the **Inception** service infrastructure for `alcacere.42.fr`. This g
 | **WordPress Admin** | WP Dashboard & site administration | `https://alcacere.42.fr/wp-admin/` | Admin user & password from secrets |
 | **Adminer** | Database administration web interface | `https://alcacere.42.fr/adminer` | MariaDB credentials from secrets |
 | **Static Website** | Developer portfolio & interactive arcade game | `https://alcacere.42.fr/portfolio/` | Public access |
-| **Prometheus** | Metric collection and alert monitoring | `https://alcacere.42.fr/prometheus/` | Read-only metrics UI |
-| **FTP (vsftpd)** | Direct secure file upload to WordPress | `ftp://alcacere.42.fr:21` | FTP user & password from secrets |
+| **Prometheus** | Metric collection and alert monitoring | `https://alcacere.42.fr/prometheus/` | Prometheus dashboard |
+| **FTP (vsftpd)** | Direct file transfer to WordPress webroot | `ftp://alcacere.42.fr:21` | FTP user & password from secrets |
 | **Redis** | Object caching engine | Internal (`redis:6379`) | Internal password |
 | **MariaDB** | SQL database engine | Internal (`mariadb:3306`) | Database password |
 
@@ -76,7 +76,7 @@ When connecting for the first time in an external web browser, you may see a sel
 
 All credentials follow the **principle of least privilege** and are separated into two distinct locations:
 
-1. **Non-secret configuration** is stored in [srcs/.env](file:///home/alcacere/inception/alcacere_inception/srcs/.env):
+1. **Non-secret configuration** is stored in [srcs/.env.example](srcs/.env.example) (copied to `srcs/.env` during initial setup):
    * `DOMAIN_NAME`: `alcacere.42.fr`
    * `MYSQL_DATABASE`: `wordpress`
    * `MYSQL_USER`: `wp_dbuser`
