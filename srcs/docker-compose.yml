@@ -132,6 +132,34 @@ services:
       retries: 3
       start_period: 3s
 
+  ftp:
+    build: ./requirements/bonus/ftp
+    image: ftp:inception
+    container_name: ftp
+    pull_policy: build
+    restart: unless-stopped
+    init: true
+    networks:
+      - inception
+    env_file:
+      - .env
+    secrets:
+      - ftp_password
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    volumes:
+      - wordpress:/var/www/html
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 21 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+
 networks:
   inception:
     name: inception
@@ -173,3 +201,5 @@ secrets:
     file: ../secrets/wp_user_password.txt
   redis_password:
     file: ../secrets/redis_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
