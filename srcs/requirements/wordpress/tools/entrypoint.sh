@@ -40,6 +40,9 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 
 	echo "[INFO] configuring redis object cache.."
 	wp config set WP_REDIS_HOST "redis" --allow-root --path=/var/www/html
+	wp config set WP_REDIS_TIMEOUT 1 --raw --allow-root --path=/var/www/html
+	wp config set WP_REDIS_READ_TIMEOUT 1 --raw --allow-root --path=/var/www/html
+	wp config set WP_REDIS_GRACEFUL true --raw --allow-root --path=/var/www/html
 	if [ -f /run/secrets/redis_password ]; then
 		REDIS_PASS=$(cat /run/secrets/redis_password)
 		wp config set WP_REDIS_PASSWORD "$REDIS_PASS" --allow-root --path=/var/www/html
