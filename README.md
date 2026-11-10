@@ -95,12 +95,13 @@ make fclean
 * [Redis Documentation](https://redis.io/docs/)
 * [vsftpd Configuration Reference](https://security.appspot.com/vsftpd/vsftpd_conf.html)
 * [Prometheus & Blackbox Exporter Docs](https://prometheus.io/docs/)
-* [HTML5 Canvas Snake Game](https://gist.github.com/straker/81b49bfa7ba68670432d8202df1e3016) (Open-source MIT reference customized for the portfolio)
+* [HTML5 Canvas Snake Game](https://gist.github.com/straker/ff00b4b49669ad3dec890306d348adc4) (Open-source reference by Steven Lambert, licensed under CC0 1.0 Universal / Public Domain, customized for the portfolio)
 
 ### Use of Artificial Intelligence
 Artificial Intelligence was utilized across specific areas of this project in accordance with 42 curriculum guidelines:
-* **Documentation & Skeletons**: AI assisted in structuring documentation templates (`DEV_DOC.md`, `USER_DOC.md`, and parts of `README.md`) and clarifying Linux administration concepts (such as RFC 5280 PKI constraints, vsftpd quirks, and Alpine package applets).
-* **Static Bonus Portfolio Website**: The HTML5/CSS portfolio page under `srcs/requirements/bonus/website/site/` was generated with AI assistance. The embedded retro arcade game was adapted from an open-source HTML5 Canvas implementation ([Straker HTML5 Canvas Snake](https://gist.github.com/straker/81b49bfa7ba68670432d8202df1e3016), MIT License).
+* **Documentation & Study Notes**: AI assisted in structuring documentation templates (`DEV_DOC.md`, `USER_DOC.md`, and parts of `README.md`), generating preparatory study notes (`docs/`), and clarifying Linux administration concepts (such as RFC 5280 PKI constraints, vsftpd quirks, and Alpine package applets).
+* **Code Reviews & Test Auditing**: AI tools were utilized to generate evaluation review checklists, audit configurations against subject requirements, and assist in designing automated end-to-end verification scripts.
+* **Static Bonus Portfolio Website**: The HTML5/CSS portfolio page under `srcs/requirements/bonus/website/site/` was generated with AI assistance. The embedded retro arcade game was adapted from an open-source HTML5 Canvas implementation ([Straker HTML5 Canvas Snake](https://gist.github.com/straker/ff00b4b49669ad3dec890306d348adc4), CC0 1.0 Universal Public Domain Dedication).
 * **Student Implementation**: All system infrastructure components—including Dockerfiles, service entrypoints, NGINX TLS reverse proxy rules, user/group permission models (UID 1000 isolation), MariaDB SQL bootstrapping, and Makefile automation—were designed, configured, debugged, and validated by the student.
 
 ---
