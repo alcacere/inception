@@ -78,7 +78,7 @@ Browser: log in as the regular user → comment on a post. Log in as admin
 ```
 docker volume inspect inception_mariadb | grep device      # /home/alcacere/data/mariadb
 docker exec -it mariadb mariadb -u root                     # Access denied ✔
-docker exec -it mariadb mariadb -u wp_user -p
+docker exec -it mariadb mariadb -u wp_dbuser -p
   > SHOW DATABASES; USE wordpress; SHOW TABLES; SELECT user_login FROM wp_users;
 ```
 
@@ -98,7 +98,117 @@ sudo kill -9 "$(docker inspect -f '{{.State.Pid}}' nginx)"; sleep 3; docker ps  
 
 ## 10. Bonus
 For each one: show the container, its Dockerfile, a working demo, and explain *why*.
-Prometheus: show every target UP, then `probe_tls_version_info`, and the `nginx:80` probe at 0.
+The live demo for every service is in §11 below.
+
+## 11. Service-by-service demo walkthrough
+One story that touches every container. Do it in this order: each step builds on the
+previous one, and the comment/upload created here are what you show again after the
+reboot in §8.
+
+Before you start:
+```
+make ps                                   # all 9 containers Up (healthy)
+cat secrets/wp_user_password.txt          # have the passwords at hand
+cat secrets/wp_admin_password.txt
+```
+
+### 11.1 NGINX: the only entry point
+```
+curl -sk -o /dev/null -w '%{http_code}\n' https://alcacere.42.fr/          # 200
+curl -sk -o /dev/null -w '%{http_code}\n' https://alcacere.42.fr/adminer   # 200
+curl -sk -o /dev/null -w '%{http_code}\n' https://alcacere.42.fr/portfolio/ # 200
+curl -sk -o /dev/null -w '%{http_code}\n' https://alcacere.42.fr/prometheus/-/healthy # 200
+docker ps --format '{{.Names}}\t{{.Ports}}'   # only nginx (443) and ftp (21, 21000-21010) publish
+```
+Say: every web UI (WordPress, Adminer, portfolio, Prometheus) goes through the same
+TLS server block. The backends have no published ports.
+
+### 11.2 WordPress: blog, login, comment moderation
+Requires `comment_moderation 1` (+ `comment_registration 1`) in the WordPress entrypoint.
+1. Private window → `https://alcacere.42.fr` → the demo post is there, and the comment
+   form asks you to log in (anonymous visitors can't comment).
+2. Log in as **`wp_author`** (`/wp-login.php`) → comment on the post
+   → "Your comment is awaiting moderation". Log out.
+3. Log in as admin **`alcacere`** → `/wp-admin` → **Comments** → the comment is under
+   **Pending** → **Approve** (or **Spam/Trash** to show rejection).
+4. Reload the post as a visitor → the approved comment is public.
+5. Show the regular user can't moderate: logged in as `wp_author`, `/wp-admin` has no
+   Comments → Approve action (role *author* lacks `moderate_comments`).
+
+Say: the admin username has no "admin" in it (subject rule), and php-fpm runs alone in
+its container. NGINX forwards `.php` to `wordpress:9000` over FastCGI.
+
+### 11.3 MariaDB: the comment is really in the database
+```
+docker exec -it mariadb mariadb -u wp_dbuser -p wordpress
+  > SELECT comment_ID, comment_author, comment_approved FROM wp_comments;
+  #   approved = 0 before approval, 1 after, 'spam' / 'trash' if rejected
+  > SELECT user_login, user_email FROM wp_users;    # alcacere + wp_author
+docker exec -it mariadb mariadb -u root          # Access denied (root needs the password)
+```
+Optional live proof: run the SELECT, approve/unapprove in wp-admin, and run it again.
+
+### 11.4 Adminer: same data in a browser
+`https://alcacere.42.fr/adminer` → System **MySQL**, Server **mariadb**, User
+**wp_dbuser**, password from `secrets/db_password.txt`, Database **wordpress**
+→ open `wp_comments` → the same row as in 11.3.
+Say: Adminer has no published port, it's PHP-FPM behind the same NGINX, and it reaches
+MariaDB by container name on the `inception` network.
+
+### 11.5 FTP: files land in the WordPress volume
+```
+echo "uploaded via ftp" > ftp-test.txt
+curl -u ftp_user:"$(cat secrets/ftp_password.txt)" \
+     -T ftp-test.txt ftp://alcacere.42.fr/wp-content/uploads/
+curl -u ftp_user:"$(cat secrets/ftp_password.txt)" ftp://alcacere.42.fr/   # lists WordPress root
+curl -k https://alcacere.42.fr/wp-content/uploads/ftp-test.txt              # served by nginx
+ls -l /home/alcacere/data/wordpress/wp-content/uploads/ftp-test.txt         # on the host volume
+curl ftp://alcacere.42.fr/   # anonymous → 530 Login incorrect
+```
+Say: the ftp container mounts the same `wordpress` volume as wordpress and nginx.
+Passive ports 21000-21010 are published, with `pasv_address` = VM IP. Users are
+chrooted to `/var/www/html`.
+
+### 11.6 Redis: WordPress object cache
+```
+docker exec wordpress wp redis status --allow-root --path=/var/www/html   # Status: Connected
+docker exec redis sh -c 'redis-cli -a "$(cat /run/secrets/redis_password)" --no-auth-warning DBSIZE'
+docker exec redis sh -c 'redis-cli -a "$(cat /run/secrets/redis_password)" --no-auth-warning MONITOR'
+#   → reload the site in the browser: GET/SET lines scroll by. Ctrl-C to stop.
+docker exec redis redis-cli PING        # NOAUTH error: password required
+```
+Also visible in wp-admin → **Settings → Redis**.
+Say: Redis caches the results of MariaDB queries in memory (128 MB, LRU). It's a cache
+only (no persistence), so deleting it loses nothing.
+
+### 11.7 Static website (portfolio)
+`https://alcacere.42.fr/portfolio/` → page + Snake game.
+```
+docker exec website ps        # darkhttpd, no PHP anywhere
+```
+Say: the subject requires a static site in any language except PHP. It's served by
+darkhttpd on 8080 and reverse-proxied by NGINX.
+
+### 11.8 Prometheus + Blackbox: monitoring all of the above
+`https://alcacere.42.fr/prometheus/` →
+- **Status → Targets**: `prometheus`, `blackbox-https` (`https://nginx:443`) and
+  `blackbox-tcp` (`nginx:443`, `mariadb:3306`, `redis:6379`, `ftp:21`) are all **UP**.
+- **Graph**: `probe_success` (all 1), `probe_tls_version_info` (TLS 1.2/1.3),
+  `(probe_ssl_earliest_cert_expiry - time()) / 86400` (certificate days left).
+
+Live failure demo:
+```
+docker stop redis
+# ~15 s later: probe_success{instance="redis:6379"} = 0
+# Alerts tab: ServiceDown → pending, then firing after 1 min
+docker start redis    # back to 1, alert resolves
+```
+Say: Blackbox probes from outside each service (like a user would), and Prometheus
+scrapes it and evaluates the alert rules.
+
+### 11.9 Close the loop: persistence
+Do §8 (reboot → `make`). Then show the approved comment, `ftp-test.txt` and the
+Prometheus history are all still there, because they live in `/home/alcacere/data/*`.
 
 ## Likely live modifications (practice these!)
 - Change the WordPress site title / add a third user via env + WP-CLI.
